@@ -1,0 +1,252 @@
+<!-- ALEXANDER MANABAT -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manabat Alexander | Account Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --background: #f7f7f8;
+            --surface: #ffffff;
+            --border: #e8e8eb;
+            --text: #242424;
+            --muted: #858585;
+            --accent: #4b65a5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "Inter", sans-serif;
+            color: var(--text);
+            background: var(--background);
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 38px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .network-label {
+            font-size: 12px;
+            color: #555;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+
+        .intro {
+            margin-bottom: 28px;
+        }
+
+        .intro h1 {
+            font-size: 29px;
+            font-weight: 700;
+            letter-spacing: -0.8px;
+            margin-bottom: 9px;
+        }
+
+        .intro p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .accounts-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .accounts-heading h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .account-count {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .account-list {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .account-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 21px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .account-card:hover {
+            border-color: #b8c5df;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.035);
+        }
+
+        .account-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .account-type {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .account-button {
+            flex-shrink: 0;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            color: #444;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .account-card:hover .account-button {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: #f7f9fd;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 35px 0 10px;
+            font-size: 11px;
+            color: #999;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 25px 15px;
+            }
+
+            .intro h1 {
+                font-size: 25px;
+            }
+
+            .account-card {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="header">
+            <div>
+                <div class="brand-name">Manabat Alexander</div>
+                <div class="brand-subtitle">Digital Account Management System</div>
+            </div>
+
+            <div class="network-label">Account Portal</div>
+        </header>
+
+        <section class="intro">
+            <h1>My Accounts</h1>
+            <p>Select an account below to access its individual account page.</p>
+        </section>
+
+        <section class="accounts-section">
+
+            <div class="accounts-heading">
+                <h2>Registered Accounts</h2>
+                <span class="account-count">4 Accounts</span>
+            </div>
+
+            <div class="account-list">
+
+                <a href="index_1.html" class="account-card">
+                    <div>
+                        <div class="account-name">Manabat_Student</div>
+                        <div class="account-type">Main Student Account</div>
+                    </div>
+                    <span class="account-button">View Account</span>
+                </a>
+
+                <a href="index_2.html" class="account-card">
+                    <div>
+                        <div class="account-name">Manabat_Personal</div>
+                        <div class="account-type">Personal Account</div>
+                    </div>
+                    <span class="account-button">View Account</span>
+                </a>
+
+                <a href="index_3.html" class="account-card">
+                    <div>
+                        <div class="account-name">Manabat_Corporate</div>
+                        <div class="account-type">Corporate Account</div>
+                    </div>
+                    <span class="account-button">View Account</span>
+                </a>
+
+                <a href="index_4.html" class="account-card">
+                    <div>
+                        <div class="account-name">Manabat_Business</div>
+                        <div class="account-type">Business Account</div>
+                    </div>
+                    <span class="account-button">View Account</span>
+                </a>
+
+            </div>
+        </section>
+
+        <footer class="footer">
+            Manabat Alexander Account Portal
+        </footer>
+
+    </main>
+
+</body>
+</html>

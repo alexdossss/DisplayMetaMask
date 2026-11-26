@@ -1,0 +1,396 @@
+<!-- ALEXANDER MANABAT -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manabat Student Account</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --background: #f7f7f8;
+            --surface: #ffffff;
+            --border: #e8e8eb;
+            --text: #242424;
+            --muted: #858585;
+            --accent: #4b65a5;
+            --accent-hover: #3c548e;
+            --green: #159765;
+            --green-light: #eaf6ef;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "Inter", sans-serif;
+            color: var(--text);
+            background: var(--background);
+            padding: 40px 20px;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 38px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .back-link {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .intro {
+            margin-bottom: 25px;
+        }
+
+        .intro h1 {
+            font-size: 29px;
+            font-weight: 700;
+            letter-spacing: -0.8px;
+            margin-bottom: 9px;
+        }
+
+        .intro p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .account-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .account-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .account-info h2 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .account-info p {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .status {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            background: #f3f3f4;
+            padding: 7px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
+        .status.connected {
+            color: var(--green);
+            background: var(--green-light);
+        }
+
+        .connect-button {
+            width: 100%;
+            height: 46px;
+            border: none;
+            border-radius: 7px;
+            background: var(--accent);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .connect-button:hover {
+            background: var(--accent-hover);
+        }
+
+        .connect-button:active {
+            transform: scale(0.99);
+        }
+
+        .connect-button:focus-visible,
+        .disconnect-button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .details-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+        }
+
+        .details-card h2 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .detail-label {
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .account-address {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #626262;
+            word-break: break-all;
+            background: #f7f7f8;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 13px;
+            min-height: 45px;
+        }
+
+        .disconnect-button {
+            margin-top: 18px;
+            width: 100%;
+            height: 42px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+            color: #555;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .disconnect-button:hover {
+            background: #f7f7f8;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 28px 0 10px;
+            font-size: 11px;
+            color: #999;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 25px 15px;
+            }
+
+            .account-card,
+            .details-card {
+                padding: 19px;
+            }
+
+            .intro h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="header">
+            <div>
+                <div class="brand-name">Manabat Alexander</div>
+                <div class="brand-subtitle">Digital Account Management System</div>
+            </div>
+
+            <a href="index.html" class="back-link">Back to Accounts</a>
+        </header>
+
+        <section class="intro">
+            <h1>Student Account</h1>
+            <p>Manage and access your registered student account.</p>
+        </section>
+
+        <section class="account-card">
+
+            <div class="account-top">
+                <div class="account-info">
+                    <h2>Manabat_Student</h2>
+                    <p>Main Student Account</p>
+                </div>
+
+                <div class="status" id="connectionStatus">
+                    <span id="statusText">Not connected</span>
+                </div>
+            </div>
+
+            <button class="connect-button" id="connectButton">
+                Connect Account
+            </button>
+
+        </section>
+
+        <section class="details-card">
+
+            <h2>Account Information</h2>
+
+            <div class="detail-label">Wallet Address</div>
+
+            <div class="account-address" id="accountArea">
+                Not connected
+            </div>
+
+            <button class="disconnect-button" id="disconnectButton">
+                Disconnect
+            </button>
+
+        </section>
+
+        <footer class="footer">
+            Manabat Alexander Account Portal
+        </footer>
+
+    </main>
+
+    <script>
+        let accounts = [];
+
+        const UpdateStatus = (connected) => {
+            const status = document.getElementById("connectionStatus");
+            const statusText = document.getElementById("statusText");
+            const connectButton = document.getElementById("connectButton");
+
+            if (connected) {
+                status.classList.add("connected");
+                statusText.textContent = "Connected";
+                connectButton.textContent = "Connected";
+            } else {
+                status.classList.remove("connected");
+                statusText.textContent = "Not connected";
+                connectButton.textContent = "Connect Account";
+            }
+        };
+
+        const DisplayAccount = (address) => {
+            const element = document.getElementById("accountArea");
+            element.textContent = address || "Not connected";
+        };
+
+        const ConnectMetaMask = async () => {
+            if (typeof window.ethereum === "undefined") {
+                alert("MetaMask is not installed or accessible.");
+                return;
+            }
+
+            try {
+                accounts = await window.ethereum.request({
+                    method: "eth_requestAccounts"
+                });
+
+                if (accounts.length > 0) {
+                    UpdateStatus(true);
+                    DisplayAccount(accounts[0]);
+                }
+            } catch (error) {
+                console.error("Error connecting:", error);
+            }
+        };
+
+        const CheckAccount = async () => {
+            if (typeof window.ethereum === "undefined") {
+                return;
+            }
+
+            try {
+                accounts = await window.ethereum.request({
+                    method: "eth_accounts"
+                });
+
+                if (accounts.length > 0) {
+                    UpdateStatus(true);
+                    DisplayAccount(accounts[0]);
+                } else {
+                    UpdateStatus(false);
+                    DisplayAccount("");
+                }
+            } catch (error) {
+                console.error("Error checking account:", error);
+            }
+        };
+
+        const DisconnectAccount = () => {
+            UpdateStatus(false);
+            DisplayAccount("");
+            accounts = [];
+        };
+
+        document
+            .getElementById("connectButton")
+            .addEventListener("click", ConnectMetaMask);
+
+        document
+            .getElementById("disconnectButton")
+            .addEventListener("click", DisconnectAccount);
+
+        if (typeof window.ethereum !== "undefined") {
+            window.ethereum.on("accountsChanged", (newAccounts) => {
+                accounts = newAccounts;
+
+                if (accounts.length > 0) {
+                    UpdateStatus(true);
+                    DisplayAccount(accounts[0]);
+                } else {
+                    UpdateStatus(false);
+                    DisplayAccount("");
+                }
+            });
+        }
+
+        CheckAccount();
+    </script>
+
+</body>
+</html>
