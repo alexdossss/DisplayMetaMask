@@ -234,6 +234,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -242,14 +243,14 @@
 
         <header class="header">
             <div>
-                <div class="brand-name">Manabat Alexander</div>
-                <div class="brand-subtitle">Digital Account Management System</div>
+                Manabat Alexander
             </div>
 
             <a href="index.html" class="back-link">Back to Accounts</a>
         </header>
 
         <section class="intro">
+            <div class="eyebrow">Student account</div>
             <h1>Student Account</h1>
             <p>Manage and access your registered student account.</p>
         </section>
@@ -277,12 +278,24 @@
 
             <h2>Account Information</h2>
 
+            <label class="detail-label" for="accountSelect">Wallet assigned to this page</label>
+            <select class="account-select" id="accountSelect" aria-label="Wallet assigned to this page">
+                <option value="">Connect MetaMask to load available wallets</option>
+            </select>
+            <p class="wallet-help">Connect to open MetaMask's account selector. Grant this site access to all four accounts, then choose the address assigned to this page. MetaMask shares addresses, not account names.</p>
+
             <div class="detail-label">Wallet Address</div>
 
             <div class="account-address" id="accountArea">
                 Not connected
             </div>
 
+            <div class="detail-label balance-label">Sepolia Test ETH Balance</div>
+            <div class="account-address" id="balanceArea" aria-live="polite">
+                Connect a wallet to view its Sepolia balance.
+            </div>
+
+            <p class="wallet-help" id="walletMessage" role="status" aria-live="polite"></p>
             <button class="disconnect-button" id="disconnectButton">
                 Disconnect
             </button>
@@ -296,100 +309,365 @@
     </main>
 
     <script>
-        let accounts = [];
+        (() => {
+            const PAGE_NAMES = {
+                index_1: "Manabat_Student",
+                index_2: "Manabat_Personal",
+                index_3: "Manabat_Corporate",
+                index_4: "Manabat_Business"
+            };
+            const PAGE_IDS = Object.keys(PAGE_NAMES);
+            const SEPOLIA_CHAIN_ID = "0xaa36a7";
+            const pageId = window.location.pathname.split("/").pop().replace(/\.html$/i, "");
+            const pageName = PAGE_NAMES[pageId];
+            const assignmentKey = "displayMetaMask.assignment." + pageId;
+            const provider = window.ethereum;
 
-        const UpdateStatus = (connected) => {
             const status = document.getElementById("connectionStatus");
             const statusText = document.getElementById("statusText");
             const connectButton = document.getElementById("connectButton");
+            const disconnectButton = document.getElementById("disconnectButton");
+            const accountSelect = document.getElementById("accountSelect");
+            const accountArea = document.getElementById("accountArea");
+            const balanceArea = document.getElementById("balanceArea");
+            const walletMessage = document.getElementById("walletMessage");
 
-            if (connected) {
-                status.classList.add("connected");
-                statusText.textContent = "Connected";
-                connectButton.textContent = "Connected";
-            } else {
-                status.classList.remove("connected");
-                statusText.textContent = "Not connected";
-                connectButton.textContent = "Connect Account";
-            }
-        };
+            let availableAccounts = [];
+            let balanceRequestId = 0;
 
-        const DisplayAccount = (address) => {
-            const element = document.getElementById("accountArea");
-            element.textContent = address || "Not connected";
-        };
+            const sameAddress = (first, second) =>
+                Boolean(first && second && first.toLowerCase() === second.toLowerCase());
 
-        const ConnectMetaMask = async () => {
-            if (typeof window.ethereum === "undefined") {
-                alert("MetaMask is not installed or accessible.");
-                return;
-            }
+            const getAssignment = () => localStorage.getItem(assignmentKey) || "";
 
-            try {
-                accounts = await window.ethereum.request({
-                    method: "eth_requestAccounts"
+            const findOtherPage = (address) => PAGE_IDS.find((otherPageId) =>
+                otherPageId !== pageId &&
+                sameAddress(
+                    localStorage.getItem("displayMetaMask.assignment." + otherPageId),
+                    address
+                )
+            );
+
+            const shortenAddress = (address) =>
+                address.slice(0, 6) + "..." + address.slice(-4);
+
+            const setMessage = (message) => {
+                walletMessage.textContent = message;
+            };
+
+            const updateStatus = (address) => {
+                const isExposed = availableAccounts.some((account) => sameAddress(account, address));
+                status.classList.toggle("connected", Boolean(address && isExposed));
+
+                if (!address) {
+                    statusText.textContent = "Not connected";
+                    connectButton.textContent = "Connect Account";
+                } else if (isExposed) {
+                    statusText.textContent = "Connected";
+                    connectButton.textContent = "Connected";
+                } else {
+                    statusText.textContent = "Access needed";
+                    connectButton.textContent = "Reconnect Wallet";
+                }
+            };
+
+            const renderAccountOptions = (selectedAddress) => {
+                accountSelect.replaceChildren(new Option("Select a wallet for this page", ""));
+
+                availableAccounts.forEach((address) => {
+                    const ownerPageId = findOtherPage(address);
+                    const label = shortenAddress(address) +
+                        (ownerPageId ? " — assigned to " + PAGE_NAMES[ownerPageId] : "");
+                    const option = new Option(label, address);
+                    option.disabled = Boolean(ownerPageId);
+                    accountSelect.add(option);
                 });
 
-                if (accounts.length > 0) {
-                    UpdateStatus(true);
-                    DisplayAccount(accounts[0]);
+                if (selectedAddress && !availableAccounts.some((address) => sameAddress(address, selectedAddress))) {
+                    const savedOption = new Option(
+                        shortenAddress(selectedAddress) + " — saved, currently unavailable",
+                        selectedAddress
+                    );
+                    savedOption.disabled = true;
+                    accountSelect.add(savedOption);
                 }
-            } catch (error) {
-                console.error("Error connecting:", error);
-            }
-        };
 
-        const CheckAccount = async () => {
-            if (typeof window.ethereum === "undefined") {
-                return;
-            }
+                accountSelect.value = selectedAddress || "";
+                accountSelect.disabled = availableAccounts.length === 0;
+            };
 
-            try {
-                accounts = await window.ethereum.request({
-                    method: "eth_accounts"
+            const formatSepoliaEth = (weiHex) => {
+                const wei = BigInt(weiHex);
+                const unit = 1000000000000000000n;
+                const whole = wei / unit;
+                const fractional = (wei % unit).toString().padStart(18, "0").slice(0, 6).replace(/0+$/, "");
+                return whole.toString() + (fractional ? "." + fractional : ".0") + " Sepolia ETH";
+            };
+
+            const refreshBalance = async (address) => {
+                const requestId = ++balanceRequestId;
+
+                if (!address) {
+                    balanceArea.textContent = "Connect a wallet to view its Sepolia balance.";
+                    return;
+                }
+
+                if (!provider) {
+                    balanceArea.textContent = "MetaMask is not available in this browser.";
+                    return;
+                }
+
+                try {
+                    const chainId = await provider.request({ method: "eth_chainId" });
+                    if (chainId.toLowerCase() !== SEPOLIA_CHAIN_ID) {
+                        if (requestId === balanceRequestId) {
+                            balanceArea.textContent = "Switch MetaMask to Sepolia to view test ETH.";
+                        }
+                        return;
+                    }
+
+                    const balance = await provider.request({
+                        method: "eth_getBalance",
+                        params: [address, "latest"]
+                    });
+
+                    if (requestId === balanceRequestId && sameAddress(address, getAssignment())) {
+                        balanceArea.textContent = formatSepoliaEth(balance);
+                    }
+                } catch (error) {
+                    if (requestId === balanceRequestId) {
+                        balanceArea.textContent = "Could not load the Sepolia balance. Check MetaMask and try again.";
+                        console.error("Could not load Sepolia balance:", error);
+                    }
+                }
+            };
+
+            const updateAccountView = (address) => {
+                accountArea.textContent = address || "Not connected";
+                updateStatus(address);
+
+                if (!address) {
+                    balanceArea.textContent = "Connect a wallet to view its Sepolia balance.";
+                } else {
+                    refreshBalance(address);
+                }
+            };
+
+            const setAvailableAccounts = (accounts) => {
+                availableAccounts = Array.isArray(accounts)
+                    ? [...new Set(accounts.filter((account) => typeof account === "string"))]
+                    : [];
+                renderAccountOptions(getAssignment());
+            };
+
+            const switchToSepolia = async () => {
+                let chainId = await provider.request({ method: "eth_chainId" });
+
+                if (chainId.toLowerCase() === SEPOLIA_CHAIN_ID) {
+                    return;
+                }
+
+                try {
+                    await provider.request({
+                        method: "wallet_switchEthereumChain",
+                        params: [{ chainId: SEPOLIA_CHAIN_ID }]
+                    });
+                } catch (error) {
+                    if (error.code !== 4902) {
+                        throw error;
+                    }
+
+                    await provider.request({
+                        method: "wallet_addEthereumChain",
+                        params: [{
+                            chainId: SEPOLIA_CHAIN_ID,
+                            chainName: "Sepolia",
+                            nativeCurrency: {
+                                name: "Sepolia Ether",
+                                symbol: "ETH",
+                                decimals: 18
+                            },
+                            rpcUrls: ["https://ethereum-sepolia.publicnode.com"],
+                            blockExplorerUrls: ["https://sepolia.etherscan.io"]
+                        }]
+                    });
+                    await provider.request({
+                        method: "wallet_switchEthereumChain",
+                        params: [{ chainId: SEPOLIA_CHAIN_ID }]
+                    });
+                }
+            };
+
+            const assignAddress = (address) => {
+                localStorage.setItem(assignmentKey, address);
+                renderAccountOptions(address);
+                updateAccountView(address);
+            };
+
+            const handleWalletSelection = async () => {
+                const address = accountSelect.value;
+
+                if (!address) {
+                    localStorage.removeItem(assignmentKey);
+                    renderAccountOptions("");
+                    updateAccountView("");
+                    setMessage("This page's saved wallet assignment has been cleared.");
+                    return;
+                }
+
+                if (!availableAccounts.some((account) => sameAddress(account, address))) {
+                    setMessage("That address is not currently available from MetaMask. Connect the wallet and try again.");
+                    renderAccountOptions(getAssignment());
+                    return;
+                }
+
+                const ownerPageId = findOtherPage(address);
+                if (ownerPageId) {
+                    setMessage("That address is already assigned to " + PAGE_NAMES[ownerPageId] + ".");
+                    renderAccountOptions(getAssignment());
+                    return;
+                }
+
+                assignAddress(address);
+                setMessage(address + " is assigned to " + pageName + ". Choose a different unused address on each other page.");
+
+                try {
+                    await switchToSepolia();
+                    await refreshBalance(address);
+                } catch (error) {
+                    balanceArea.textContent = "Switch MetaMask to Sepolia to view test ETH.";
+                    setMessage(error.code === 4001
+                        ? "MetaMask network switch was declined. Switch to Sepolia to view this test balance."
+                        : "Could not switch to Sepolia. Check the network in MetaMask and try again.");
+                    console.error("Could not switch to Sepolia:", error);
+                }
+            };
+
+            const connectMetaMask = async () => {
+                if (!provider) {
+                    setMessage("MetaMask is not installed or accessible in this browser.");
+                    return;
+                }
+
+                connectButton.disabled = true;
+                setMessage("Waiting for MetaMask. Select all four accounts so each page can use its assigned wallet.");
+                try {
+                    try {
+                        await provider.request({
+                            method: "wallet_requestPermissions",
+                            params: [{ eth_accounts: {} }]
+                        });
+                    } catch (permissionError) {
+                        if (permissionError.code !== -32601) {
+                            throw permissionError;
+                        }
+                        await provider.request({ method: "eth_requestAccounts" });
+                    }
+
+                    const accounts = await provider.request({ method: "eth_accounts" });
+                    setAvailableAccounts(accounts);
+
+                    const savedAddress = getAssignment();
+                    if (!savedAddress) {
+                        const unusedAccounts = availableAccounts.filter((account) => !findOtherPage(account));
+                        setMessage(unusedAccounts.length
+                            ? "MetaMask is connected. Choose the address for " + pageName + " from the wallet selector."
+                            : "MetaMask did not return an unused address. Edit this site's account access in MetaMask to allow the other wallets, then reconnect.");
+                        return;
+                    }
+
+                    const address = savedAddress;
+                    const ownerPageId = findOtherPage(address);
+                    if (ownerPageId) {
+                        setMessage("This address is already assigned to " + PAGE_NAMES[ownerPageId] + ". Choose another address for " + pageName + ".");
+                        return;
+                    }
+
+                    renderAccountOptions(address);
+                    updateAccountView(address);
+
+                    if (availableAccounts.some((account) => sameAddress(account, address))) {
+                        setMessage("This page is assigned its own wallet. Choose a different unused address on each other page.");
+                        try {
+                            await switchToSepolia();
+                            await refreshBalance(address);
+                        } catch (error) {
+                            balanceArea.textContent = "Switch MetaMask to Sepolia to view test ETH.";
+                            setMessage(error.code === 4001
+                                ? "MetaMask network switch was declined. Switch to Sepolia to view this test balance."
+                                : "Could not switch to Sepolia. Check the network in MetaMask and try again.");
+                            console.error("Could not switch to Sepolia:", error);
+                        }
+                    } else {
+                        setMessage("This page's saved address is not currently shared with this site. Choose an available address or allow this account in MetaMask.");
+                    }
+                } catch (error) {
+                    setMessage(error.code === 4001
+                        ? "MetaMask connection was declined."
+                        : error.code === -32002
+                            ? "A MetaMask request is already pending. Open MetaMask to approve it, then try again."
+                            : "Could not connect to MetaMask. Check the wallet and try again.");
+                    console.error("Error connecting to MetaMask:", error);
+                } finally {
+                    connectButton.disabled = false;
+                    updateStatus(getAssignment());
+                }
+            };
+
+            const disconnectAccount = () => {
+                localStorage.removeItem(assignmentKey);
+                renderAccountOptions("");
+                updateAccountView("");
+                setMessage("This page's wallet assignment was cleared. MetaMask may still share wallet addresses with this website.");
+            };
+
+            connectButton.addEventListener("click", connectMetaMask);
+            disconnectButton.addEventListener("click", disconnectAccount);
+            accountSelect.addEventListener("change", handleWalletSelection);
+
+            if (provider && typeof provider.on === "function") {
+                provider.on("accountsChanged", (accounts) => {
+                    setAvailableAccounts(accounts);
+                    const address = getAssignment();
+                    updateAccountView(address);
+
+                    if (address && !availableAccounts.some((account) => sameAddress(account, address))) {
+                        setMessage("This page's wallet assignment is saved, but MetaMask is not currently sharing that address with this site.");
+                    }
                 });
 
-                if (accounts.length > 0) {
-                    UpdateStatus(true);
-                    DisplayAccount(accounts[0]);
-                } else {
-                    UpdateStatus(false);
-                    DisplayAccount("");
-                }
-            } catch (error) {
-                console.error("Error checking account:", error);
+                provider.on("chainChanged", () => {
+                    refreshBalance(getAssignment());
+                });
             }
-        };
 
-        const DisconnectAccount = () => {
-            UpdateStatus(false);
-            DisplayAccount("");
-            accounts = [];
-        };
-
-        document
-            .getElementById("connectButton")
-            .addEventListener("click", ConnectMetaMask);
-
-        document
-            .getElementById("disconnectButton")
-            .addEventListener("click", DisconnectAccount);
-
-        if (typeof window.ethereum !== "undefined") {
-            window.ethereum.on("accountsChanged", (newAccounts) => {
-                accounts = newAccounts;
-
-                if (accounts.length > 0) {
-                    UpdateStatus(true);
-                    DisplayAccount(accounts[0]);
-                } else {
-                    UpdateStatus(false);
-                    DisplayAccount("");
+            const initialize = async () => {
+                if (!provider) {
+                    setMessage("MetaMask is not installed or accessible in this browser.");
+                    return;
                 }
-            });
-        }
 
-        CheckAccount();
+                try {
+                    setAvailableAccounts(await provider.request({ method: "eth_accounts" }));
+                    const address = getAssignment();
+                    renderAccountOptions(address);
+                    updateAccountView(address);
+
+                    if (!address) {
+                        setMessage("Connect and choose one address for this page. MetaMask does not share its account names with websites.");
+                    } else if (availableAccounts.some((account) => sameAddress(account, address))) {
+                        setMessage("This page keeps its own saved wallet assignment. Choose a different unused address on each other page.");
+                    } else {
+                        setMessage("This page's saved address is not currently shared with this site. Connect MetaMask or choose an available address.");
+                    }
+                } catch (error) {
+                    setMessage("Could not read MetaMask accounts. Use Connect Account to try again.");
+                    console.error("Error checking MetaMask accounts:", error);
+                }
+            };
+
+            initialize();
+        })();
     </script>
 
 </body>
